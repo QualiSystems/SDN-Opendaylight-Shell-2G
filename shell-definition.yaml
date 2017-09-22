@@ -1,0 +1,54 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+metadata:
+  template_name: SDN Opendaylight Shell 2G
+  template_author: Quali
+  template_version: 0.1.0
+  template_icon: shell-icon.png
+
+description: >
+ Sample TOSCA based shell
+
+imports:
+  - cloudshell_standard: cloudshell_networking_standard_5_0_1.yaml
+
+node_types:
+
+  vendor.SDN Opendaylight 2G:
+    derived_from: cloudshell.nodes.Switch
+    #properties:
+    #  my_property:
+    #    type: string          # optional values: string, integer, float, boolean, cloudshell.datatypes.Password
+    #    default: fast
+    #    description: Some attribute description
+    #    constraints:
+    #      - valid_values: [fast, slow]
+    capabilities:
+      concurrent_execution:
+        type: cloudshell.capabilities.SupportConcurrentCommands
+      auto_discovery_capability:
+        type: cloudshell.capabilities.AutoDiscovery
+        properties:
+          auto_discovery_description:
+            type: string
+            default: Describe the auto discovery
+          inventory_description:
+            type: string
+            default: Describe the resource shell template
+          User:
+            description: User with administrative privileges
+            type: string
+          Password:
+            description: The password is required by some CLI protocols such as Telnet and is required according to the device configuration.
+            type: cloudshell.datatypes.Password
+          Console Port:
+            description: The port on the console server, usually TCP port, which the device is associated with.
+            type: integer
+            default: 8181
+    artifacts:
+      icon:
+        file: shell-icon.png
+        type: tosca.artifacts.File
+      driver:
+        file: SdnopendaylightDriver.zip
+        type: tosca.artifacts.File
