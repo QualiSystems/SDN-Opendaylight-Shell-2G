@@ -1,14 +1,14 @@
-from cloudshell.devices.driver_helper import get_logger_with_thread_id
+from cloudshell.core.context.error_handling_context import ErrorHandlingContext
+from cloudshell.devices.standards.sdn.configuration_attributes_structure import GenericSDNResource
 from cloudshell.devices.driver_helper import get_api
+from cloudshell.devices.driver_helper import get_logger_with_thread_id
 from cloudshell.sdn.resource_driver_interface import SDNResourceDriverInterface
 from cloudshell.shell.core.resource_driver_interface import ResourceDriverInterface
 from cloudshell.shell.core.driver_utils import GlobalLock
 
 from cloudshell.sdn.odl.runners import ODLAutoloadRunner
 from cloudshell.sdn.odl.runners import ODLConnectivityRunner
-from cloudshell.sdn.odl.runners import ODLAddRemoveTrunksRunner
 from cloudshell.sdn.odl.runners import ODLRemoveOpenflowRunner
-from cloudshell.sdn.config_attrs_structure import GenericSDNResource
 from cloudshell.sdn.odl.client import ODLClient
 
 
@@ -33,101 +33,29 @@ class SdnopendaylightDriver(ResourceDriverInterface, SDNResourceDriverInterface,
         :return:
         """
         logger = get_logger_with_thread_id(context)
-        api = get_api(context)
+        logger.info('ApplyConnectivityChanges started')
 
-        resource_config = GenericSDNResource.from_context(context=context, shell_name=self.SHELL_NAME)
+        with ErrorHandlingContext(logger):
+            api = get_api(context)
+            resource_config = GenericSDNResource.from_context(context=context, shell_name=self.SHELL_NAME)
+            password = api.DecryptPassword(resource_config.password).Value
 
-        password = api.DecryptPassword(resource_config.password).Value
+            odl_client = ODLClient(address=resource_config.address,
+                                   username=resource_config.user,
+                                   password=password,
+                                   scheme=resource_config.scheme,
+                                   port=int(resource_config.port))
 
-        odl_client = ODLClient(address=resource_config.address,
-                               username=resource_config.user,
-                               password=password,
-                               scheme=resource_config.scheme,
-                               port=int(resource_config.port))
+            connectivity_runner = ODLConnectivityRunner(odl_client=odl_client,
+                                                        logger=logger,
+                                                        resource_config=resource_config)
 
-        connectivity_runner = ODLConnectivityRunner(odl_client=odl_client,
-                                                    logger=logger,
-                                                    resource_config=resource_config)
+            logger.info('Start applying connectivity changes, request is: {0}'.format(str(request)))
+            result = connectivity_runner.apply_connectivity_changes(request=request)
+            logger.info('Finished applying connectivity changes, response is: {0}'.format(str(result)))
+            logger.info('Apply Connectivity changes completed')
 
-        logger.info('Start applying connectivity changes, request is: {0}'.format(str(request)))
-        result = connectivity_runner.apply_connectivity_changes(request=request)
-        logger.info('Finished applying connectivity changes, response is: {0}'.format(str(result)))
-        logger.info('Apply Connectivity changes completed')
-
-        return result
-
-    def _parse_ports(self, ports):
-        """Parse ports string into the list
-
-        :param str ports:
-        :rtype: list[tuple[str, str]]
-        """
-        if ports == "":
-            return []
-
-        return [tuple(port_pair.split("::")) for port_pair in ports.strip(";").split(";")]
-
-    def add_trunk_ports(self, context, ports):
-        """Mark given ports as a trunk ports on the ODL
-
-        :param ResourceCommandContext context: ResourceCommandContext object with all Resource Attributes inside
-        :param ports:
-        :return:
-        """
-        logger = get_logger_with_thread_id(context)
-        logger.info('Create Trunk Ports command started')
-        api = get_api(context)
-        ports = self._parse_ports(ports)
-
-        resource_config = GenericSDNResource.from_context(context=context, shell_name=self.SHELL_NAME)
-
-        password = api.DecryptPassword(resource_config.password).Value
-
-        odl_client = ODLClient(address=resource_config.address,
-                               username=resource_config.user,
-                               password=password,
-                               scheme=resource_config.scheme,
-                               port=int(resource_config.port))
-
-        add_remove_trunks_runner = ODLAddRemoveTrunksRunner(odl_client=odl_client,
-                                                            logger=logger,
-                                                            resource_config=resource_config)
-
-        result = add_remove_trunks_runner.add_trunks(ports=ports)
-        logger.info('Create Trunk Ports command completed')
-
-        return result
-
-    def remove_trunk_ports(self, context, ports):
-        """Unmark given ports as a trunk ports on the ODL
-
-        :param ResourceCommandContext context: ResourceCommandContext object with all Resource Attributes inside
-        :param ports:
-        :return:
-        """
-        logger = get_logger_with_thread_id(context)
-        logger.info('Remove Trunk Ports command started')
-        api = get_api(context)
-        ports = self._parse_ports(ports)
-
-        resource_config = GenericSDNResource.from_context(context=context, shell_name=self.SHELL_NAME)
-
-        password = api.DecryptPassword(resource_config.password).Value
-
-        odl_client = ODLClient(address=resource_config.address,
-                               username=resource_config.user,
-                               password=password,
-                               scheme=resource_config.scheme,
-                               port=int(resource_config.port))
-
-        add_remove_trunks_runner = ODLAddRemoveTrunksRunner(odl_client=odl_client,
-                                                            logger=logger,
-                                                            resource_config=resource_config)
-
-        result = add_remove_trunks_runner.remove_trunks(ports=ports)
-        logger.info('Remove Trunk Ports command completed')
-
-        return result
+            return result
 
     @GlobalLock.lock
     def get_inventory(self, context):
@@ -139,27 +67,27 @@ class SdnopendaylightDriver(ResourceDriverInterface, SDNResourceDriverInterface,
         """
         logger = get_logger_with_thread_id(context)
         logger.info('Autoload started')
-        api = get_api(context)
 
-        resource_config = GenericSDNResource.from_context(context=context, shell_name=self.SHELL_NAME)
+        with ErrorHandlingContext(logger):
+            api = get_api(context)
+            resource_config = GenericSDNResource.from_context(context=context, shell_name=self.SHELL_NAME)
+            password = api.DecryptPassword(resource_config.password).Value
 
-        password = api.DecryptPassword(resource_config.password).Value
+            odl_client = ODLClient(address=resource_config.address,
+                                   username=resource_config.user,
+                                   password=password,
+                                   scheme=resource_config.scheme,
+                                   port=int(resource_config.port))
 
-        odl_client = ODLClient(address=resource_config.address,
-                               username=resource_config.user,
-                               password=password,
-                               scheme=resource_config.scheme,
-                               port=int(resource_config.port))
+            autoload_operations = ODLAutoloadRunner(odl_client=odl_client,
+                                                    logger=logger,
+                                                    api=api,
+                                                    resource_config=resource_config)
 
-        autoload_operations = ODLAutoloadRunner(odl_client=odl_client,
-                                                logger=logger,
-                                                api=api,
-                                                resource_config=resource_config)
+            response = autoload_operations.discover()
+            logger.info('Autoload completed')
 
-        response = autoload_operations.discover()
-        logger.info('Autoload completed')
-
-        return response
+            return response
 
     @GlobalLock.lock
     def remove_openflow(self, context, node_id, table_id, flow_id):
@@ -174,22 +102,22 @@ class SdnopendaylightDriver(ResourceDriverInterface, SDNResourceDriverInterface,
         """
         logger = get_logger_with_thread_id(context)
         logger.info('Remove openflow command started')
-        api = get_api(context)
 
-        resource_config = GenericSDNResource.from_context(context=context, shell_name=self.SHELL_NAME)
+        with ErrorHandlingContext(logger):
+            api = get_api(context)
+            resource_config = GenericSDNResource.from_context(context=context, shell_name=self.SHELL_NAME)
+            password = api.DecryptPassword(resource_config.password).Value
 
-        password = api.DecryptPassword(resource_config.password).Value
+            odl_client = ODLClient(address=resource_config.address,
+                                   username=resource_config.user,
+                                   password=password,
+                                   scheme=resource_config.scheme,
+                                   port=int(resource_config.port))
 
-        odl_client = ODLClient(address=resource_config.address,
-                               username=resource_config.user,
-                               password=password,
-                               scheme=resource_config.scheme,
-                               port=int(resource_config.port))
+            autoload_operations = ODLRemoveOpenflowRunner(odl_client=odl_client,
+                                                          logger=logger)
 
-        autoload_operations = ODLRemoveOpenflowRunner(odl_client=odl_client,
-                                                      logger=logger)
+            response = autoload_operations.remove_openflow(node_id=node_id, table_id=table_id, flow_id=flow_id)
+            logger.info('Remove openflow command completed')
 
-        response = autoload_operations.remove_openflow(node_id=node_id, table_id=table_id, flow_id=flow_id)
-        logger.info('Remove openflow command completed')
-
-        return response
+            return response

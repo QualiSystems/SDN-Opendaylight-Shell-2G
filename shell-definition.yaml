@@ -10,45 +10,38 @@ description: >
  Sample TOSCA based shell
 
 imports:
-  - cloudshell_standard: cloudshell_networking_standard_5_0_1.yaml
+  - cloudshell_standard: cloudshell_sdn_controller_standard_1_0_0.yaml
 
 node_types:
 
   vendor.SDN Opendaylight 2G:
-    derived_from: cloudshell.nodes.Switch
-    #properties:
-    #  my_property:
-    #    type: string          # optional values: string, integer, float, boolean, cloudshell.datatypes.Password
-    #    default: fast
-    #    description: Some attribute description
-    #    constraints:
-    #      - valid_values: [fast, slow]
+    derived_from: cloudshell.nodes.SDNController
     capabilities:
-      concurrent_execution:
-        type: cloudshell.capabilities.SupportConcurrentCommands
       auto_discovery_capability:
         type: cloudshell.capabilities.AutoDiscovery
         properties:
-          auto_discovery_description:
-            type: string
-            default: Describe the auto discovery
-          inventory_description:
-            type: string
-            default: Describe the resource shell template
           User:
             description: User with administrative privileges
             type: string
           Password:
-            description: The password is required by some CLI protocols such as Telnet and is required according to the device configuration.
             type: cloudshell.datatypes.Password
-          Console Port:
-            description: The port on the console server, usually TCP port, which the device is associated with.
+          Controller TCP Port:
+            description:
             type: integer
             default: 8181
+          Scheme:
+            type: string
+            default: HTTP
+          Enable Full Trunk Ports:
+            description: "Optional. in case need to configure a full trunk port (example: ports that private cloud provider are connected to) the ports should be listed in format: openflow:1::eth1;openflow:1:eth2"
+            type: string
+          Disable Full Trunk Ports:
+            description: "Optional. in case need to remove a full trunk port configuration the ports should be listed in format: openflow:1::eth1;openflow:1:eth2"
+            type: string
     artifacts:
       icon:
         file: shell-icon.png
         type: tosca.artifacts.File
       driver:
-        file: SdnopendaylightDriver.zip
+        file: SdnOpendaylightShell2GDriver.zip
         type: tosca.artifacts.File
