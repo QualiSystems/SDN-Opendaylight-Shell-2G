@@ -1,10 +1,8 @@
+![](https://github.com/QualiSystems/cloudshell-shells-documentaion-templates/blob/master/cloudshell_logo.png)
+
 # SDN-Opendaylight-Shell-2G
 [![Dependency Status](https://dependencyci.com/github/QualiSystems/SDN-Opendaylight-Shell-2G/badge)](https://dependencyci.com/github/QualiSystems/SDN-Opendaylight-Shell-2G)
 [![Stories in Ready](https://badge.waffle.io/QualiSystems/cloudshell-sdn-odl.svg?label=ready&title=Ready)](http://waffle.io/QualiSystems/SDN-Opendaylight-Shell-2G)
-
-![](https://github.com/QualiSystems/cloudshell-shells-documentaion-templates/blob/master/cloudshell_logo.png)
-
-# **SDN OpenDaylight 2G Shell**  
 
 Release date: October 2017
 
